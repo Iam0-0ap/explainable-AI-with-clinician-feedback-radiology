@@ -167,11 +167,11 @@ def feedback_stats():
     total_count = cur.fetchone()[0]
 
     # Total entries with positive comment
-    cur.execute("""SELECT COUNT(*) FROM feedback WHERE comment="correct" """)
+    cur.execute("""SELECT COUNT(*) FROM feedback WHERE comment="Correct" """)
     positive_count = cur.fetchone()[0]
 
     # Total entries with negative comment
-    cur.execute("""SELECT COUNT(*) FROM feedback WHERE comment="incorrect" """)
+    cur.execute("""SELECT COUNT(*) FROM feedback WHERE comment="Incorrect" """)
     negative_count = cur.fetchone()[0]
 
     cur.execute("""

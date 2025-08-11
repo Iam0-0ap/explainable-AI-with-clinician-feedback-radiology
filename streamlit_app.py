@@ -77,10 +77,16 @@ if page == "Pneumonia Detection":
                 for exp in explanations:
                     st.write(f"**Label:** {exp['label']}")
                     st.write(f"**Probability:** {exp['probability']:.4f}")
-                    st.write(f"**Cues:** {exp['label']}")
+
+                    if isinstance(exp['cues'], list):
+                        st.write(f"**Cues:** {', '.join(exp['cues'])}")
+                        session_state.cue = exp['cues'][0]
+                    else:
+                        st.write(f"**Cues:** {exp['label']}")
+                        session_state.cue = exp['cues']
+
                     session_state.image_id = result.get("image_id")
-                    session_state.label = exp['label']
-                    session_state.cue = exp['cues']
+                    session_state.label = exp['label']                    
 
             # Show original & heatmap side-by-side
             cols = st.columns(2)
@@ -104,26 +110,44 @@ if page == "Pneumonia Detection":
     st.subheader("Clinician Feedback")
 
     if session_state.image_id and session_state.label and session_state.cue:
-        st.write(f"**Image ID:** {session_state.image_id}")
-        st.write(f"**Label:** {session_state.label}")
-        st.write(f"**Cue:** {session_state.cue}")
+        with st.form("feedback_form"):
+            # Display case details
+            st.markdown(
+                f"""
+                <div style="padding: 15px; border-radius: 8px; background-color: #f9f9f9; border: 1px solid #ddd;">
+                    <p><b>Image ID:</b> {session_state.image_id}</p>
+                    <p><b>Label:</b> {session_state.label}</p>
+                    <p><b>Cue:</b> {session_state.cue}</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-        comment = st.text_area("Your comment (why this cue is relevant/irrelevant):")
+            # Feedback choice
+            prediction_eval = st.radio(
+                "How is the model prediction?",
+                options=["Correct", "Incorrect"],
+                horizontal=True
+            )
 
-        if st.button("Submit Feedback"):
-            feedback_payload = {
-                "image_id": session_state.image_id,
-                "label": session_state.label,
-                "cue": session_state.cue,
-                "comment": comment
-            }
-            resp = requests.post(f"{API_URL}/feedback", json=feedback_payload)
-            if resp.status_code == 200:
-                st.success("Feedback recorded successfully.")
-            else:
-                st.error("Error submitting feedback.")
+            # Submit button inside the form
+            submitted = st.form_submit_button("Submit Feedback")
+
+            if submitted:
+                feedback_payload = {
+                    "image_id": session_state.image_id,
+                    "label": session_state.label,
+                    "cue": session_state.cue,
+                    "comment": prediction_eval
+                }
+                resp = requests.post(f"{API_URL}/feedback", json=feedback_payload)
+                if resp.status_code == 200:
+                    st.success("Feedback recorded successfully.")
+                else:
+                    st.error("Error submitting feedback.")
     else:
         st.info("Run an explanation first to enable feedback form.")
+
     
 
 elif page == "Clinician Feedback Stats":
