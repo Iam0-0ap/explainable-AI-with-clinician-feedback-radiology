@@ -1,3 +1,7 @@
 archive/
 test/
+outputs/
+
 .idea/*
+.vscode/*
+__pycache__
